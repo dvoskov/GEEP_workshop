@@ -1,0 +1,1 @@
+Grid size: 88 X 86 X 60
