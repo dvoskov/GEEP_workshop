@@ -14,11 +14,11 @@ class BaseModel(DartsModel):
         self.timer.node["initialization"].start()
 
         # create reservoir from UNISIM - 20 layers (81*58*20, Corner-point grid)
-        self.permx = load_single_keyword('reservoir.in', 'PERMX')
-        self.permy = load_single_keyword('reservoir.in', 'PERMY')
-        self.permz = load_single_keyword('reservoir.in', 'PERMZ')
-        self.poro = load_single_keyword('reservoir.in', 'PORO')
-        self.depth = load_single_keyword('reservoir.in', 'DEPTH')
+        self.permx = load_single_keyword('grid/reservoir.grdecl', 'PERMX', cache=1)
+        self.permy = self.permx
+        self.permz = load_single_keyword('grid/reservoir.grdecl', 'PERMZ', cache=1)
+        self.poro = load_single_keyword('grid/reservoir.grdecl', 'PORO', cache=1)
+        self.depth = load_single_keyword('grid/reservoir.grdecl', 'DEPTH', cache=1)
 
         if os.path.exists(('width.in')):
             print('Reading dx, dy and dz specifications...')
@@ -30,14 +30,14 @@ class BaseModel(DartsModel):
 
 
         # Import other properties from files
-        filename = 'grid.grdecl'
+        filename = 'grid/grid.grdecl'
         self.actnum = load_single_keyword(filename, 'ACTNUM')
-        self.coord = load_single_keyword(filename, 'COORD')
-        self.zcorn = load_single_keyword(filename, 'ZCORN')
+        self.coord = load_single_keyword(filename, 'COORD', cache=1)
+        self.zcorn = load_single_keyword(filename, 'ZCORN', cache=1)
 
         is_CPG = False  # True for re-calculation of dx, dy and dz from CPG grid
 
-        self.reservoir = StructReservoir(self.timer, nx=81, ny=58, nz=20, dx=self.dx, dy=self.dy, dz=self.dz,
+        self.reservoir = StructReservoir(self.timer, nx=88, ny=86, nz=60, dx=self.dx, dy=self.dy, dz=self.dz,
                                          permx=self.permx, permy=self.permy, permz=self.permz, poro=self.poro,
                                          depth=self.depth, actnum=self.actnum, coord=self.coord, zcorn=self.zcorn,
                                          is_cpg=is_CPG)
@@ -45,14 +45,14 @@ class BaseModel(DartsModel):
         poro = np.array(self.reservoir.mesh.poro, copy=False)
         poro[poro == 0.0] = 1.E-4
 
-        self.reservoir.set_boundary_volume(yz_minus=1e15, yz_plus=1e15, xz_minus=1e15,
-                                           xz_plus=1e15, xy_minus=1e15, xy_plus=1e15)
+        # self.reservoir.set_boundary_volume(yz_minus=1e15, yz_plus=1e15, xz_minus=1e15,
+        #                                    xz_plus=1e15, xy_minus=1e15, xy_plus=1e15)
 
         if is_CPG:
             dx, dy, dz = self.reservoir.get_cell_cpg_widths()
             save_few_keywords('width.in', ['DX', 'DY', 'DZ'], [dx, dy, dz])
 
-        self.read_and_add_perforations('WELLS.INC')
+        self.read_and_add_perforations('grid/WELLS.INC')
 
         self.timer.node["initialization"].stop()
 

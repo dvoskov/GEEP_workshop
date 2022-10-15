@@ -23,26 +23,26 @@ class Model(BaseModel):
         self.phases = self.property_container.phases_name
 
         """ properties correlations """
-        self.property_container.flash_ev = Flash(self.components, [4, 2, 1e-1], self.zero)
-        self.property_container.density_ev = dict([('gas', Density(compr=1e-3, dens0=200)),
+        self.property_container.flash_ev = Flash(self.components, [10, 5, 1e-3], self.zero)
+        self.property_container.density_ev = dict([('gas', Density(compr=1e-3, dens0=2)),
                                                    ('wat', Density(compr=1e-5, dens0=600))])
         self.property_container.viscosity_ev = dict([('gas', ViscosityConst(0.05)),
                                                      ('wat', ViscosityConst(0.5))])
-        self.property_container.rel_perm_ev = dict([('gas', PhaseRelPerm("gas")),
-                                                    ('wat', PhaseRelPerm("oil"))])
+        self.property_container.rel_perm_ev = dict([('gas', PhaseRelPerm("gas", .2, .1)),
+                                                    ('wat', PhaseRelPerm("oil", .2, .1))])
 
         """ Activate physics """
         self.physics = SuperPhysics(self.property_container, self.timer, n_points=200, min_p=1, max_p=400,
                                     min_z=self.zero/10, max_z=1-self.zero/10)
 
         self.inj_comp = [1.0 - 2 * self.zero, self.zero]
-        self.ini_comp = [0.01, 0.2]
+        self.ini_comp = [0.01, 0.95]
         self.pressure_ini = 100
 
         # Some newton parameters for non-linear solution:
-        self.params.first_ts = 1e-5
+        self.params.first_ts = 1e-1
         self.params.mult_ts = 2
-        self.params.max_ts = 5
+        self.params.max_ts = 92
 
         self.params.tolerance_newton = 1e-2
         self.params.tolerance_linear = 1e-3
@@ -59,10 +59,10 @@ class Model(BaseModel):
 
     def set_wells(self):
         for i, w in enumerate(self.reservoir.wells):
-            if w.name == 'INJ017':
+            if 'INJ' in w.name:
                 w.control = self.physics.new_bhp_inj(120, self.inj_comp)
-            elif w.name == 'PROD024A' or w.name == 'PROD009':
-                w.control = self.physics.new_bhp_prod(80)
+            elif 'PROD' in w.name:
+                w.control = self.physics.new_bhp_prod(30)
             else:
                 w.control = self.physics.new_rate_prod(0, 1)
 

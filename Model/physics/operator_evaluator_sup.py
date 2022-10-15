@@ -274,12 +274,7 @@ class PropertyEvaluator(operator_set_evaluator_iface):
         #  some arrays will be reused in thermal
         (self.sat, self.x, rho, self.rho_m, self.mu, self.kr, self.pc, self.ph) = self.property.evaluate(state)
 
-        if len(self.ph) == 1:
-            values[0] = 1
-        elif len(self.ph) == 2:
-            values[0] = self.sat[0]
-        else:
-            values[0] = self.sat[0]
-            values[1] = self.sat[1]
+        values[0] = self.sat[0]
+        values[1] = self.sat[1]
 
         return 0
